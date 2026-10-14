@@ -1,6 +1,6 @@
 # Streamstar
 
-A runnable implementation of **Drift-Adaptive Federated Sketching for Privacy-Preserving Streaming Frequency Analytics**, the Group 26 IOE413 project proposal. Go implements the stream processor, sketches, privacy accounting, simulated secure summation, dataset replay, Kafka transport, and HTTP server. A dependency-free JavaScript dashboard shows actual engine measurements.
+A runnable implementation of **Drift-Adaptive Federated Sketching for Privacy-Preserving Streaming Frequency Analytics**, the Group 26 IOE413 project proposal. Go implements the stream processor, sketches, privacy accounting, simulated secure summation, dataset replay, Kafka transport, and HTTP server. An Astro dashboard with Preact islands shows actual engine measurements.
 
 The research question is whether private rolling width selection and change-triggered releases improve the accuracy/privacy/communication trade-off over fixed-width, release-every-round sketches. The implementation provides an experiment to test that question; it does not assume the hypotheses are true.
 
@@ -31,7 +31,7 @@ nix build
 # Or: nix run -- serve
 ```
 
-A Go 1.23+ installation is sufficient to run `go run ./cmd/streamstar serve`; Kafka is an optional ingestion source. The server and dashboard ship in one binary. No Node runtime, Flink, database, or frontend build is needed.
+A Go 1.23+ installation is sufficient to run `go run ./cmd/streamstar serve`; Kafka is an optional ingestion source. The server and the prebuilt dashboard ship in one binary. Running it needs no Node runtime, Flink, database, or frontend build.
 
 ## Implemented methods
 
@@ -68,6 +68,25 @@ python3 scripts/report.py results/drifting
 Each run writes per-round CSV and its complete config. `summary.json` records mean error, MSE, NCR, processing time, final epsilon, releases, bytes, and post-drift recovery rounds. A null recovery means the error never reached the configured target before the next drift or run end. `scripts/report.py` writes a standalone interactive HTML report and a Markdown aggregate table.
 
 Synthetic event generation is always seeded. Privacy noise uses **crypto entropy by default**. The supplied reproducibility configs explicitly enable deterministic noise for research: those runs carry no deployment DP claim. Timing measurements naturally vary between runs.
+
+## Dashboard development
+
+The dashboard source lives in `ui/` and is built with [Astro](https://astro.build) and Preact islands:
+
+- **Static by default.** Page structure, explanatory text, and the protocol notes are plain HTML rendered at build time. The protocol page ships no JavaScript.
+- **Islands for live data.** Each live widget (`ui/src/islands/`) subscribes only to the engine data it displays. The shared store (`ui/src/lib/store.ts`) polls `/api/state` once per second and replaces a slice only when its contents change, so a new round patches just the affected components and a paused stream causes no DOM updates.
+- **Polling is bounded.** The first request fetches at most 120 rounds; later requests are incremental. Polling stops while the tab is hidden, and out-of-order responses are discarded.
+- **Self-contained.** Fonts are bundled, so the dashboard makes no external requests. Hashed assets under `/assets/` are served as immutable.
+
+```sh
+make run              # engine on :5173
+make ui-dev           # Astro dev server on :4321 with hot reload; proxies /api to the engine
+make ui               # type-check, test, and rebuild internal/server/web
+```
+
+`make ui-dev` is the fastest loop. `make run` serves the embedded build, so restart it after `make ui` to see a rebuilt dashboard.
+
+The build output in `internal/server/web` is committed so that `go build` works without Node. It is reproducible: any checkout produces identical files, CI fails if the committed copy is stale, and `nix build` compiles the dashboard from `ui/` instead of using the committed copy. Git treats the directory as generated (`.gitattributes`): it is hidden from diffs and never merged line by line, so resolve a conflict there by running `make ui`.
 
 ## Real datasets and Kafka
 
@@ -113,7 +132,7 @@ curl -X POST http://localhost:5173/api/events \
 | Endpoint | Purpose |
 | --- | --- |
 | `GET /healthz` | Server health |
-| `GET /api/state?since=ROUND&generation=GENERATION` | Config, latest round, and incremental history |
+| `GET /api/state?since=ROUND&generation=GENERATION&limit=N` | Config, latest round, and incremental history (at most the last `N` rounds when `limit` is set) |
 | `GET /api/config` | Complete effective config |
 | `POST /api/control` | Synthetic/replay controls; JSON action `play`, `pause`, `step`, `drift`, or `reset` |
 | `POST /api/events` | Manual-source batch ingestion |
@@ -126,11 +145,12 @@ The local server binds to `127.0.0.1:5173`. Use `-addr` to change the listen add
 
 ```sh
 make test             # race detector and go vet
+make ui               # dashboard type-check, unit tests, and build
 make build
 go test ./internal/engine -run '^$' -bench . -benchmem
 ```
 
-Tests cover signed secret-share reconstruction, HybridSketch decoding order, tail fitting, RR likelihood ratios and unbiasedness, contribution clipping/window expiry, privacy composition/caps, withheld releases, source parsers, Kafka flush/commit semantics, invalid ingestion, and the HTTP control/export flow. [Validation notes](docs/validation.md) record the completed checks and sample evaluation.
+Tests cover signed secret-share reconstruction, HybridSketch decoding order, tail fitting, RR likelihood ratios and unbiasedness, contribution clipping/window expiry, privacy composition/caps, withheld releases, source parsers, Kafka flush/commit semantics, invalid ingestion, the HTTP control/export flow, history limits, and asset caching. Dashboard tests (`ui/src/lib/store.test.ts`) cover incremental history merging, generation resets, out-of-order responses, change-only updates, hidden-tab pausing, and offline reporting. [Validation notes](docs/validation.md) record the completed checks and sample evaluation.
 
 ## Sources
 

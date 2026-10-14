@@ -1,0 +1,101 @@
+---
+// Static dashboard shell. Everything that reads engine state is an island;
+// the rest is plain HTML rendered at build time.
+import Icon, { type IconName } from '../components/Icon';
+import ExperimentBar from '../islands/ExperimentBar';
+import FooterStatus from '../islands/FooterStatus';
+import MethodList from '../islands/MethodList';
+import MethodPicker from '../islands/MethodPicker';
+import RunStatus from '../islands/RunStatus';
+import Settings from '../islands/Settings';
+import SourceBadge from '../islands/SourceBadge';
+import Base from './Base.astro';
+
+interface Props {
+  view: 'overview' | 'comparison' | 'privacy';
+  title: string;
+  subtitle: string;
+}
+
+const { view, title, subtitle } = Astro.props;
+
+const nav: { id: Props['view']; href: string; label: string; icon: IconName }[] = [
+  { id: 'overview', href: '/', label: 'Overview', icon: 'overview' },
+  { id: 'comparison', href: '/comparison.html', label: 'Method comparison', icon: 'comparison' },
+  { id: 'privacy', href: '/privacy.html', label: 'Privacy ledger', icon: 'shield' },
+];
+const current = nav.find((item) => item.id === view)!;
+---
+
+<Base title={`${current.label} · Streamstar`}>
+  <aside class="sidebar">
+    <a class="brand" href="/">
+      <span class="brand-mark">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <path d="m16 4 3.6 8.4L28 16l-8.4 3.6L16 28l-3.6-8.4L4 16l8.4-3.6Z" fill="currentColor"></path>
+        </svg>
+      </span>
+      <span class="brand-text"><b>Streamstar</b><span>Group 26 · IOE413</span></span>
+    </a>
+
+    <div class="nav-label">Workspace</div>
+    <nav aria-label="Main navigation">
+      {
+        nav.map((item) => (
+          <a class:list={['nav-item', { active: item.id === view }]} href={item.href} aria-current={item.id === view ? 'page' : undefined}>
+            <Icon name={item.icon} />
+            <span>{item.label}</span>
+          </a>
+        ))
+      }
+      <a class="nav-item" href="/protocol.html" target="_blank">
+        <Icon name="document" />
+        <span>Protocol notes</span>
+        <Icon name="external" class="external" />
+      </a>
+    </nav>
+
+    <MethodList client:media="(min-width: 1025px)" />
+
+    <div class="sidebar-bottom">
+      <SourceBadge client:load />
+      <p>Built from the Group 26 proposal · IOE413 Streaming Data Analytics</p>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div class="breadcrumb">Workspace <span>/</span> <b>{current.label}</b></div>
+      <div class="topbar-right">
+        <RunStatus client:load />
+        <Settings client:load />
+      </div>
+    </header>
+
+    <div class="page">
+      <div class="page-heading">
+        <div>
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+        </div>
+        <a href="/api/export.csv" class="button outline export">
+          <Icon name="download" />
+          <span>Export CSV</span>
+        </a>
+      </div>
+
+      <ExperimentBar client:load />
+      <MethodPicker client:media="(max-width: 1024px)" />
+
+      <slot />
+
+      <footer>
+        <FooterStatus client:load />
+        <span>
+          Exact truth visible · research evaluation only{' '}
+          <a href="/protocol.html#limitations" target="_blank">Limitations ↗</a>
+        </span>
+      </footer>
+    </div>
+  </main>
+</Base>

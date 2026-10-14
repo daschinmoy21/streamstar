@@ -1,0 +1,1 @@
+import{c as e,t,v as n}from"./jsxRuntime.module.v6wS8nul.js";function r(){let{connection:r}=n(e);return t(`span`,{class:r===`offline`?`status-dot offline`:`status-dot`})}export{r as t};

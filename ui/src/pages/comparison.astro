@@ -1,0 +1,45 @@
+---
+import ComparisonTable from '../islands/ComparisonTable';
+import Dashboard from '../layouts/Dashboard.astro';
+---
+
+<Dashboard
+  view="comparison"
+  title="Put the methods to the test."
+  subtitle="Compare accuracy, communication, and privacy on the same live windows."
+>
+  <section class="card">
+    <div class="card-header">
+      <div>
+        <h2>One stream, seven approaches</h2>
+        <p>Event-frequency methods share a target; the PrivSketch reproduction estimates client presence.</p>
+      </div>
+    </div>
+    <ComparisonTable client:load />
+  </section>
+
+  <div class="comparison-notes">
+    <article class="card text-panel">
+      <h2>H1 · Adaptive width</h2>
+      <p>
+        Use the experiment CLI to sweep fixed widths across multiple seeds. Compare average ℓ∞ error and recovery time
+        after known injected shifts. A single live run is exploratory evidence.
+      </p>
+      <code>go run ./cmd/streamstar experiment</code>
+    </article>
+    <article class="card text-panel">
+      <h2>H2 · Private release decisions</h2>
+      <p>
+        Compare adaptive width with and without the gate. Reusing an estimate adds no release cost, but each new private
+        probe spends budget. Staleness remains part of the accuracy measurement.
+      </p>
+    </article>
+    <article class="card text-panel">
+      <h2>H3 · Trust-model trade-offs</h2>
+      <p>
+        Compare central sketches with Sampled Count-Min LDP at matched cumulative privacy levels. Keep the
+        conditional-privacy PrivSketch reproduction separate: its target and privacy definition differ.
+      </p>
+    </article>
+  </div>
+</Dashboard>

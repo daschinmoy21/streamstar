@@ -1,0 +1,1 @@
+import{o as e,s as t,t as n,v as r}from"./jsxRuntime.module.v6wS8nul.js";function i(){let i=r(e),a=r(t);return n(`label`,{class:`mobile-method-label`,children:[`Selected estimator`,n(`select`,{value:a,onChange:e=>t.set(e.currentTarget.value),children:i.map(e=>n(`option`,{value:e.id,children:e.name},e.id))})]})}export{i as default};

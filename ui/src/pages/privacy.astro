@@ -1,0 +1,67 @@
+---
+import Icon from '../components/Icon';
+import Contribution from '../islands/Contribution';
+import LedgerTable from '../islands/LedgerTable';
+import PrivacyChart from '../islands/PrivacyChart';
+import Dashboard from '../layouts/Dashboard.astro';
+---
+
+<Dashboard view="privacy" title="Account for every query." subtitle="Private releases, private decisions, and a finite budget.">
+  <div class="alert">
+    <Icon name="shield" />
+    <div>
+      <h2>Privacy is a budget, including the decision to publish.</h2>
+      <p>
+        Gaussian mechanisms compose with zCDP; local randomized response uses pure-DP sequential composition. Overlapping
+        windows receive no amplification.
+      </p>
+    </div>
+  </div>
+
+  <section class="card privacy-section">
+    <div class="card-header">
+      <div>
+        <h2>Cumulative privacy spend</h2>
+        <p>Each estimator is an independent experimental protocol</p>
+      </div>
+      <span class="badge outline">δ = 10⁻⁵</span>
+    </div>
+    <PrivacyChart client:load />
+  </section>
+
+  <div class="privacy-cards">
+    <article class="card text-panel">
+      <h2>Protected contribution</h2>
+      <Contribution client:load />
+      <p>
+        Replacement of one client group's complete trajectory is the neighboring relation. Normalization uses public
+        capacity, including empty slots.
+      </p>
+    </article>
+    <article class="card text-panel">
+      <h2>Gate and width selection</h2>
+      <p>
+        The probe is Gaussian-noised before drift detection or Zipf fitting. The publication decision, width, and fitted
+        exponent are postprocessing of that probe. Its cost is charged even when a release is withheld.
+      </p>
+    </article>
+    <article class="card text-panel">
+      <h2>Evaluation boundary</h2>
+      <p>
+        This dashboard exposes exact ground truth, accuracy metrics, and all seven methods for research. It is not a
+        private publication endpoint. Secure aggregation is simulated in one process.
+      </p>
+      <a href="/protocol.html" target="_blank">Read assumptions and equations ↗</a>
+    </article>
+  </div>
+
+  <section class="card privacy-section">
+    <div class="card-header">
+      <div>
+        <h2>Query accounting</h2>
+        <p>A cap prevents further queries when the protocol can no longer afford them</p>
+      </div>
+    </div>
+    <LedgerTable client:visible />
+  </section>
+</Dashboard>

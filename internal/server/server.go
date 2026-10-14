@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 	"streamstar/internal/stream"
 )
 
-//go:embed web/*
+//go:embed web
 var assets embed.FS
 
 type Options struct {
@@ -153,7 +154,12 @@ func (s *Server) Handler() http.Handler {
 	})
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("Cache-Control", "no-store")
+		if strings.HasPrefix(r.URL.Path, "/assets/") {
+			// Astro content-hashes everything under /assets/.
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		} else {
+			w.Header().Set("Cache-Control", "no-store")
+		}
 		mux.ServeHTTP(w, r)
 	})
 }
@@ -178,6 +184,7 @@ func (s *Server) state(w http.ResponseWriter, r *http.Request) {
 	defer s.mu.Unlock()
 	since, _ := strconv.Atoi(r.URL.Query().Get("since"))
 	generation, _ := strconv.Atoi(r.URL.Query().Get("generation"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	if generation != s.generation {
 		since = 0
 	}
@@ -186,6 +193,9 @@ func (s *Server) state(w http.ResponseWriter, r *http.Request) {
 		if round.Number > since {
 			history = append(history, round)
 		}
+	}
+	if limit > 0 && len(history) > limit {
+		history = history[len(history)-limit:]
 	}
 	var latest *engine.Round
 	if len(s.history) > 0 {

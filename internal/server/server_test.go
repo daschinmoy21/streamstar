@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/csv"
 	"encoding/json"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"streamstar/internal/engine"
@@ -94,5 +95,30 @@ func TestStepPauseResetAndIncrementalState(t *testing.T) {
 	}
 	if w := request(s, http.MethodGet, "/protocol.html", ""); w.Code != 200 || !strings.Contains(w.Body.String(), "Neighboring relation") {
 		t.Fatal("protocol documentation missing")
+	}
+}
+func TestStateLimitAndAssetCaching(t *testing.T) {
+	s := testServer(t, "synthetic")
+	for range 5 {
+		if w := request(s, http.MethodPost, "/api/control", `{"action":"step"}`); w.Code != 200 {
+			t.Fatal(w.Body.String())
+		}
+	}
+	var state struct{ History []engine.Round }
+	w := request(s, http.MethodGet, "/api/state?limit=2", "")
+	json.Unmarshal(w.Body.Bytes(), &state)
+	if len(state.History) != 2 || state.History[0].Number != 4 || state.History[1].Number != 5 {
+		t.Fatalf("limit returned %d rounds", len(state.History))
+	}
+	if got := w.Header().Get("Cache-Control"); got != "no-store" {
+		t.Fatalf("API cache header %q", got)
+	}
+	files, err := fs.Glob(assets, "web/assets/*.js")
+	if err != nil || len(files) == 0 {
+		t.Fatal("no embedded dashboard assets")
+	}
+	w = request(s, http.MethodGet, strings.TrimPrefix(files[0], "web"), "")
+	if w.Code != 200 || !strings.Contains(w.Header().Get("Cache-Control"), "immutable") {
+		t.Fatalf("asset served with %d %q", w.Code, w.Header().Get("Cache-Control"))
 	}
 }

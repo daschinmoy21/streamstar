@@ -20,6 +20,8 @@ type Method struct {
 	Privacy  string `json:"privacy"`
 	Adaptive bool   `json:"adaptive"`
 	Gated    bool   `json:"gated"`
+	// Conditional marks a privacy argument weaker than full-domain DP.
+	Conditional bool `json:"conditional"`
 }
 
 var Methods = []Method{
@@ -29,7 +31,7 @@ var Methods = []Method{
 	{ID: "adaptive", Name: "Adaptive width", Color: "#fbbf24", Target: "event frequency", Privacy: "central DP", Adaptive: true},
 	{ID: "gated", Name: "Adaptive + private gate", Color: "#2dd4bf", Target: "event frequency", Privacy: "central DP", Adaptive: true, Gated: true},
 	{ID: "local", Name: "Sampled Count-Min LDP", Color: "#fb7185", Target: "event frequency", Privacy: "full-domain local DP"},
-	{ID: "privsketch", Name: "PrivSketch reproduction", Color: "#f97316", Target: "client presence", Privacy: "conditional only; ordering metadata"},
+	{ID: "privsketch", Name: "PrivSketch reproduction", Color: "#f97316", Target: "client presence", Privacy: "conditional only; ordering metadata", Conditional: true},
 }
 
 type Result struct {

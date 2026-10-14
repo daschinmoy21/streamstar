@@ -1,0 +1,3 @@
+# Astro build output embedded into the Go binary; regenerate with `make ui`.
+# Hidden from diffs and never merged line by line: on conflict, rerun `make ui`.
+internal/server/web/** linguist-generated=true -diff -merge

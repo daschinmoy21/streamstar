@@ -1,4 +1,4 @@
-name: Go verification
+name: Verification
 on:
   push:
   pull_request:
@@ -16,3 +16,21 @@ jobs:
       - run: go test -race ./...
       - run: go vet ./...
       - run: go build ./cmd/streamstar
+  dashboard:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - name: Embedded build is up to date
+        run: git diff --exit-code -- ../internal/server/web && test -z "$(git status --porcelain -- ../internal/server/web)"
