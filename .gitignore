@@ -1,0 +1,9 @@
+.firecrawl/
+bin/
+results/
+data/
+*.test
+coverage.out
+__pycache__/
+.direnv/
+result
