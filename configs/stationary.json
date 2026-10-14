@@ -1,0 +1,6 @@
+{
+  "deterministic_noise": true,
+  "seed": 26,
+  "epsilon_limit": 12,
+  "drift_every": 0
+}
